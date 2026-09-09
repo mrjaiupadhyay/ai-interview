@@ -73,6 +73,3 @@ app/
   └── globals.css                # Global styles
 ```
 
-## License
-
-MIT
