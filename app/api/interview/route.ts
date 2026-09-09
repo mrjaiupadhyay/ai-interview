@@ -1,15 +1,14 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 
-function getOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
+function getGroqClient() {
+  const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not set in environment variables');
+    throw new Error('GROQ_API_KEY is not set in environment variables');
   }
 
-  return new OpenAI({ apiKey });
+  return new Groq({ apiKey });
 }
 
 type InterviewConfig = {
@@ -19,19 +18,24 @@ type InterviewConfig = {
   duration: number;
 };
 
+// Note: llama-3.3-70b-versatile and llama-3.1-8b-instant were deprecated by Groq
+// (announced June 2026). Using a currently supported production model instead.
+// See https://console.groq.com/docs/models for the up-to-date list.
+const GROQ_MODEL = 'openai/gpt-oss-120b';
+
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
         {
           error:
-            'OpenAI API key is not configured. Please set OPENAI_API_KEY in your .env.local file.',
+            'Groq API key is not configured. Please set GROQ_API_KEY in your .env.local file.',
         },
         { status: 500 }
       );
     }
 
-    const openai = getOpenAIClient();
+    const groq = getGroqClient();
 
     const body = await request.json();
 
@@ -80,8 +84,8 @@ Then provide comprehensive feedback.`;
 
     // START INTERVIEW
     if (action === 'start') {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const completion = await groq.chat.completions.create({
+        model: GROQ_MODEL,
         messages: [
           {
             role: 'system',
@@ -125,8 +129,8 @@ Then provide comprehensive feedback.`;
         })),
       ];
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const completion = await groq.chat.completions.create({
+        model: GROQ_MODEL,
         messages: conversationMessages,
         temperature: 0.7,
       });
@@ -175,8 +179,8 @@ Then provide comprehensive feedback.`;
         },
       ];
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const completion = await groq.chat.completions.create({
+        model: GROQ_MODEL,
         messages: conversationMessages,
         temperature: 0.7,
       });
